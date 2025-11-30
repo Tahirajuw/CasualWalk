@@ -19,6 +19,8 @@ const Products = () => {
     totalPages: 1
   });
 
+  const apiUrl = process.env.REACT_APP_API_URL; // Declare the API URL here
+
   const categories = ['Running', 'Casual', 'Sports', 'Formal', 'Sneakers', 'Boots'];
   const brands = ['Nike', 'Adidas', 'Puma', 'Reebok', 'New Balance', 'Converse'];
 
@@ -26,38 +28,39 @@ const Products = () => {
     fetchProducts();
   }, [filters, pagination.currentPage]);
 
- const fetchProducts = async () => {
-  try {
-    setLoading(true);
-    const queryParams = new URLSearchParams({
-      ...filters,
-      page: pagination.currentPage,
-      limit: 12
-    }).toString();
+  const fetchProducts = async () => {  // Update fetchProducts function
+    try {
+      setLoading(true);
+      const queryParams = new URLSearchParams({
+        ...filters,
+        page: pagination.currentPage,
+        limit: 12
+      }).toString();
 
-    const res = await axios.get(`/api/products?${queryParams}`);
-    
-    // Log the response for debugging
-    console.log('API Response:', res.data);
+      const res = await axios.get(`${apiUrl}/products?${queryParams}`);
 
-    // Check if the response data is in the expected format
-    if (res.data && res.data.products && Array.isArray(res.data.products)) {
-      setProducts(res.data.products);
-      setPagination({
-        currentPage: res.data.currentPage,
-        totalPages: res.data.totalPages
-      });
-    } else {
-      console.error('Unexpected response structure:', res.data);
-      setProducts([]); // Fallback
+      // Log the response for debugging
+      console.log('API Response:', res.data);
+
+      // Check if the response data is in the expected format
+      if (res.data && res.data.products && Array.isArray(res.data.products)) {
+        setProducts(res.data.products);
+        setPagination({
+          currentPage: res.data.currentPage,
+          totalPages: res.data.totalPages
+        });
+      } else {
+        console.error('Unexpected response structure:', res.data);
+        setProducts([]); // Fallback
+      }
+    } catch (error) {
+      console.error('Error fetching products:', error);
+      setProducts([]); // Fallback on error
+    } finally {
+      setLoading(false);
     }
-  } catch (error) {
-    console.error('Error fetching products:', error);
-    setProducts([]); // Fallback on error
-  } finally {
-    setLoading(false);
-  }
-};
+  };
+
   const handleFilterChange = (key, value) => {
     setFilters({ ...filters, [key]: value });
     setPagination({ ...pagination, currentPage: 1 });
@@ -155,43 +158,16 @@ const Products = () => {
             </button>
           </aside>
 
-<div className="products-content">
-  {loading ? (
-    <div className="loading">Loading products...</div>
-  ) : Array.isArray(products) && products.length > 0 ? (
-    <>
-      <div className="products-grid">
-        {products.map(product => (
-          <ProductCard key={product._id} product={product} />
-        ))}
-      </div>
-      {pagination.totalPages > 1 && (
-        <div className="pagination">
-          <button
-            onClick={() => setPagination({ ...pagination, currentPage: pagination.currentPage - 1 })}
-            disabled={pagination.currentPage === 1}
-            className="btn btn-secondary"
-          >
-            Previous
-          </button>
-          <span>Page {pagination.currentPage} of {pagination.totalPages}</span>
-          <button
-            onClick={() => setPagination({ ...pagination, currentPage: pagination.currentPage + 1 })}
-            disabled={pagination.currentPage === pagination.totalPages}
-            className="btn btn-secondary"
-          >
-            Next
-          </button>
-        </div>
-      )}
-    </>
-  ) : (
-    <div className="no-products">
-      <p>No products found matching your criteria.</p>
-    </div>
-  )}
-</div>
-
+          <div className="products-content">
+            {loading ? (
+              <div className="loading">Loading products...</div>
+            ) : Array.isArray(products) && products.length > 0 ? (
+              <>
+                <div className="products-grid">
+                  {products.map(product => (
+                    <ProductCard key={product._id} product={product} />
+                  ))}
+                </div>
                 {pagination.totalPages > 1 && (
                   <div className="pagination">
                     <button
@@ -212,6 +188,10 @@ const Products = () => {
                   </div>
                 )}
               </>
+            ) : (
+              <div className="no-products">
+                <p>No products found matching your criteria.</p>
+              </div>
             )}
           </div>
         </div>
