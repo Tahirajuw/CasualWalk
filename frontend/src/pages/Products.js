@@ -27,26 +27,34 @@ const Products = () => {
   }, [filters, pagination.currentPage]);
 
   const fetchProducts = async () => {
-    try {
-      setLoading(true);
-      const queryParams = new URLSearchParams({
-        ...filters,
-        page: pagination.currentPage,
-        limit: 12
-      }).toString();
-      
-      const res = await axios.get(`/api/products?${queryParams}`);
+  try {
+    setLoading(true);
+    const queryParams = new URLSearchParams({
+      ...filters,
+      page: pagination.currentPage,
+      limit: 12
+    }).toString();
+    
+    const res = await axios.get(`/api/products?${queryParams}`);
+
+    // Check if the response data is in the expected format
+    if (res.data && res.data.products && Array.isArray(res.data.products)) {
       setProducts(res.data.products);
       setPagination({
         currentPage: res.data.currentPage,
         totalPages: res.data.totalPages
       });
-    } catch (error) {
-      console.error('Error fetching products:', error);
-    } finally {
-      setLoading(false);
+    } else {
+      console.error('Unexpected response structure:', res.data);
+      setProducts([]); // Fallback
     }
-  };
+  } catch (error) {
+    console.error('Error fetching products:', error);
+    setProducts([]); // Fallback on error
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleFilterChange = (key, value) => {
     setFilters({ ...filters, [key]: value });
